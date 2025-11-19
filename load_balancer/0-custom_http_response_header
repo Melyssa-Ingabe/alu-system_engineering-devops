@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
-#Bash script that installs HAProxy & makes configurations
+# Configure Nginx server so that /redirect_me is redirecting to another page
 
-apt-get -y install software-properties-common
-add-apt-repository ppa:vbernat/haproxy-1.8
-apt-get update
-apt-get -y install haproxy
-echo "ENABLED=1" >> /etc/default/haproxy
-printf %s "listen 5819-webs
-    bind *:80
-    mode http
-    balance roundrobin
-    server 6883-web-01 18.234.78.213:80 check
-    server 6883-web-02 98.93.185.24:80 check
-" >> /etc/haproxy/haproxy.cfg
-sudo service haproxy restart
+sudo apt-get update -y
+sudo apt-get install -y nginx
+config=\
+"server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        root /var/www/html;
+        index index.html index.htm index.nginx-debian.html;
+        server_name _;
+	add_header X-Served-By \$HOSTNAME;
+}
+"
+sudo chown -R "$USER":"$USER" /etc/nginx/sites-available/default
+echo "$config" > /etc/nginx/sites-available/default
+sudo service nginx restart
