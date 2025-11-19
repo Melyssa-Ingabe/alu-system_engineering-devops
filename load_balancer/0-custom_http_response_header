@@ -1,22 +1,16 @@
-onfigures a new Ubuntu server with Nginx and sets a custom HTTP header
+#!/usr/bin/env bash
+#Bash script that installs HAProxy & makes configurations
 
-# Ignore shellcheck SC2154
-# shellcheck disable=SC2154
-
-# Update and install Nginx
-apt-get update -y
-apt-get install nginx -y
-
-# Get the hostname
-HOSTNAME=$(hostname)
-
-# Add custom header to Nginx default config
-CONFIG_FILE="/etc/nginx/sites-available/default"
-if grep -q "add_header X-Served-By" "$CONFIG_FILE"; then
-    echo "Custom header already set."
-else
-    sed -i "/^\s*location \/ {/a\\\tadd_header X-Served-By \"$HOSTNAME\";" "$CONFIG_FILE"
-fi
-
-# Restart Nginx to apply changes
-systemctl restart nginx
+apt-get -y install software-properties-common
+add-apt-repository ppa:vbernat/haproxy-1.8
+apt-get update
+apt-get -y install haproxy
+echo "ENABLED=1" >> /etc/default/haproxy
+printf %s "listen 5819-webs
+    bind *:80
+    mode http
+    balance roundrobin
+    server 6917-web-01 3.93.143.209:80 check
+    server 6917-web-02 98.82.2.172:80 check
+" >> /etc/haproxy/haproxy.cfg
+sudo service haproxy restart
